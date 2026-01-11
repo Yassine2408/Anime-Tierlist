@@ -1,7 +1,7 @@
-import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
+const { withSentryConfig } = require("@sentry/nextjs");
 
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "cdn.myanimelist.net" },
@@ -26,4 +26,4 @@ const sentryOptions = {
   disableLogger: true,
 };
 
-export default withSentryConfig(nextConfig, sentryOptions);
+module.exports = withSentryConfig(nextConfig, sentryOptions);
