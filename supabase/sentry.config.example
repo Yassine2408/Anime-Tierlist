@@ -1,0 +1,5 @@
+defaults.url=https://sentry.io/
+defaults.org=your-org
+defaults.project=anime-tierlist
+auth.token=your-cli-auth-token
+
