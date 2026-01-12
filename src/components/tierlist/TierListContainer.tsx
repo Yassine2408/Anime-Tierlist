@@ -44,6 +44,9 @@ type TierListContainerProps = {
   isPublic?: boolean;
   shareId?: string | null;
   readOnly?: boolean;
+  onTogglePublic?: (next: boolean) => Promise<string | null> | string | null;
+  onSave?: (data: { title: string; tiers: Tier[] }) => Promise<void>;
+  saveLabel?: string;
 };
 
 export function TierListContainer({
@@ -54,6 +57,9 @@ export function TierListContainer({
   isPublic = false,
   shareId = null,
   readOnly = false,
+  onTogglePublic,
+  onSave,
+  saveLabel = "Save Changes",
 }: TierListContainerProps) {
   const [tiers, setTiers] = useState<Tier[]>(initialTiers ?? DEFAULT_TIERS);
   const [pool, setPool] = useState<Array<Anime & { itemId?: string }>>(initialPool ?? []);
@@ -228,32 +234,37 @@ export function TierListContainer({
     }
     setSaving(true);
     try {
-      const items = tiers.flatMap((tier) =>
-        tier.items.map((item, idx) => ({
-          anime_id: item.id,
-          tier_rank: tier.label,
-          position: idx,
-        }))
-      );
-
-      if (tierListId) {
-        await updateTierList(supabase, {
-          id: tierListId,
-          title: localTitle,
-          items,
-          is_public: isPublicState,
-          share_id: shareIdState,
-        });
+      if (onSave) {
+        await onSave({ title: localTitle, tiers });
         showToast("Ranking synced", "success");
       } else {
-        const result = await saveTierList(supabase, {
-          title: localTitle,
-          items,
-          is_public: isPublicState,
-          share_id: shareIdState,
-        });
-        showToast("New collection created", "success");
-        router.push(`/tierlist/${result.id}?edit=1`);
+        const items = tiers.flatMap((tier) =>
+          tier.items.map((item, idx) => ({
+            anime_id: item.id,
+            tier_rank: tier.label,
+            position: idx,
+          }))
+        );
+
+        if (tierListId) {
+          await updateTierList(supabase, {
+            id: tierListId,
+            title: localTitle,
+            items,
+            is_public: isPublicState,
+            share_id: shareIdState,
+          });
+          showToast("Ranking synced", "success");
+        } else {
+          const result = await saveTierList(supabase, {
+            title: localTitle,
+            items,
+            is_public: isPublicState,
+            share_id: shareIdState,
+          });
+          showToast("New collection created", "success");
+          router.push(`/tierlist/${result.id}?edit=1`);
+        }
       }
     } catch (err) {
       showToast("Failed to save collection", "error");
@@ -264,12 +275,17 @@ export function TierListContainer({
 
   const handleTogglePublic = async () => {
     const next = !isPublicState;
-    const nextShareId = next ? shareIdState ?? generateShareId() : null;
+    let nextShareId = next ? shareIdState ?? generateShareId() : null;
+    
+    if (onTogglePublic) {
+      const result = await onTogglePublic(next);
+      nextShareId = result ?? nextShareId;
+    }
     
     setIsPublicState(next);
     setShareIdState(nextShareId);
 
-    if (tierListId) {
+    if (!onTogglePublic && tierListId) {
       try {
         await updateTierList(supabase, {
           id: tierListId,
@@ -349,7 +365,7 @@ export function TierListContainer({
                 onClick={handleSave} disabled={saving}
                 className="rounded-full bg-brand px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-xl shadow-brand/20 transition hover:brightness-110 active:scale-95 disabled:opacity-50"
               >
-                {saving ? "SYNCING..." : "SYNC TO CIRCLE"}
+                {saving ? "SYNCING..." : saveLabel.toUpperCase()}
               </button>
               <button
                 onClick={() => setShareOpen(true)}

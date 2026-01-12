@@ -64,7 +64,7 @@ export default async function TierListDetailPage({ params, searchParams }: PageP
       <TierListContainer
         initialTiers={tiers}
         initialPool={isEdit ? pool : []}
-        title={tierList.title}
+        initialTitle={tierList.title}
         isPublic={tierList.is_public}
         shareId={initialShareId}
         onTogglePublic={
