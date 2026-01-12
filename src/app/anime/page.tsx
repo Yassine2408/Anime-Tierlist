@@ -5,7 +5,9 @@ import { AnimeCard } from "@/components/anime/AnimeCard";
 import { AnimeCardSkeleton } from "@/components/anime/AnimeCardSkeleton";
 import { FilterPanel } from "@/components/anime/FilterPanel";
 import { SearchBar } from "@/components/anime/SearchBar";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { useToast } from "@/components/ui/ToastProvider";
+import { submitEpisodeFeedback } from "@/lib/feedback";
 import { fetchTopAnime, searchAnime } from "@/lib/anilist";
 import type { Anime } from "@/types/anime";
 
@@ -151,6 +153,7 @@ function AiringCard({
   const [epComment, setEpComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { showToast } = useToast();
+  const { supabase } = useAuth();
 
   const avgText = useMemo(() => {
     if (!summary || !summary.count) return "—";
@@ -165,7 +168,7 @@ function AiringCard({
     }
     setSubmitting(true);
     try {
-      await submitEpisodeFeedback({
+      await submitEpisodeFeedback(supabase, {
         anime_id: anime.id,
         episode: Number(ep),
         rating: Number(epRating),
