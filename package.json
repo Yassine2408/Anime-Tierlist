@@ -28,7 +28,6 @@
     "typescript": "^5"
   },
   "devDependencies": {
-    "@netlify/plugin-nextjs": "^5.7.4",
     "eslint": "^9",
     "eslint-config-next": "16.1.1"
   }
