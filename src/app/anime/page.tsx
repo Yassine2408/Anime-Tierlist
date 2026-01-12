@@ -5,6 +5,7 @@ import { AnimeCard } from "@/components/anime/AnimeCard";
 import { AnimeCardSkeleton } from "@/components/anime/AnimeCardSkeleton";
 import { FilterPanel } from "@/components/anime/FilterPanel";
 import { SearchBar } from "@/components/anime/SearchBar";
+import { useToast } from "@/components/ui/ToastProvider";
 import { fetchTopAnime, searchAnime } from "@/lib/anilist";
 import type { Anime } from "@/types/anime";
 
