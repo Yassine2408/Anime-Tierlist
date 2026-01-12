@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { AnimeCard } from "@/components/anime/AnimeCard";
 import { AnimeCardSkeleton } from "@/components/anime/AnimeCardSkeleton";
 import { FilterPanel } from "@/components/anime/FilterPanel";
