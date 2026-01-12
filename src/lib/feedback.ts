@@ -127,8 +127,11 @@ export async function fetchRecentCommunityFeedback(limit = 50): Promise<Communit
       .limit(limit),
   ]);
 
+  const animeRows = (animeData.data ?? []) as unknown as Database["public"]["Tables"]["anime_feedback"]["Row"][];
+  const episodeRows = (episodeData.data ?? []) as unknown as Database["public"]["Tables"]["episode_feedback"]["Row"][];
+
   const animeFeedback: CommunityFeedback[] =
-    animeData.data?.map((row) => ({
+    animeRows.map((row) => ({
       id: row.id,
       user_id: row.user_id,
       anime_id: row.anime_id,
@@ -139,7 +142,7 @@ export async function fetchRecentCommunityFeedback(limit = 50): Promise<Communit
     })) ?? [];
 
   const episodeFeedback: CommunityFeedback[] =
-    episodeData.data?.map((row) => ({
+    episodeRows.map((row) => ({
       id: row.id,
       user_id: row.user_id,
       anime_id: row.anime_id,
@@ -164,7 +167,13 @@ export async function fetchRecentCommunityFeedback(limit = 50): Promise<Communit
     .select("id, username, display_name")
     .in("id", userIds);
   
-  const profileMap = new Map(profiles?.map((p) => [p.id, p]) ?? []);
+  type ProfileLite = {
+    id: string;
+    username: string | null;
+    display_name: string | null;
+  };
+  const profileRows = (profiles ?? []) as unknown as ProfileLite[];
+  const profileMap = new Map(profileRows.map((p) => [p.id, p]));
   
   return combined.map((f) => {
     const profile = profileMap.get(f.user_id);

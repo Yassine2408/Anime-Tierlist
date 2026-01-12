@@ -1,12 +1,11 @@
 import { createServerClient, type CookieOptions } from "@supabase/auth-helpers-nextjs";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { getSupabaseEnv } from "../supabase";
 import type { Database } from "@/types/supabase";
 
 export async function createSupabaseServerClient() {
   const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv();
   const cookieStore = await cookies();
-  const headerStore = await headers();
 
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -33,11 +32,6 @@ export async function createSupabaseServerClient() {
         } catch {
           // Read-only during static rendering; noop.
         }
-      },
-    },
-    headers: {
-      get(name: string) {
-        return headerStore.get(name) ?? undefined;
       },
     },
   });

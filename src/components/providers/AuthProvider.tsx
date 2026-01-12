@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import type { AuthContextValue, AuthState } from "@/types/auth";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 type Props = {
   children: React.ReactNode;
@@ -32,7 +33,8 @@ export function AuthProvider({ children }: Props) {
   useEffect(() => {
     let isMounted = true;
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then((res: Awaited<ReturnType<typeof supabase.auth.getSession>>) => {
+      const { data } = res;
       if (!isMounted) return;
       setState({
         user: data.session?.user ?? null,
@@ -43,7 +45,7 @@ export function AuthProvider({ children }: Props) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
       if (!isMounted) return;
       setState({
         user: session?.user ?? null,

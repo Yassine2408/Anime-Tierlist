@@ -4,7 +4,8 @@ import { getTierListByShareId } from "@/lib/database";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { fetchAnimeById } from "@/lib/anilist";
 import type { Anime } from "@/types/anime";
-import { notFound, type Metadata } from "next";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 
 type PageProps = {
@@ -70,7 +71,7 @@ export default async function PublicTierListPage({ params }: PageProps) {
         <h1 className="text-4xl font-black tracking-tight text-foreground">{tierList.title}</h1>
         <p className="text-sm font-medium text-muted">A curated community ranking.</p>
       </header>
-      <TierListContainer initialTiers={tiers} initialPool={[]} title={tierList.title} readOnly isPublic />
+      <TierListContainer initialTiers={tiers} initialPool={[]} initialTitle={tierList.title} readOnly isPublic />
     </main>
   );
 }

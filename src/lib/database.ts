@@ -21,18 +21,31 @@ export async function saveTierList(supabase: Supabase, payload: SaveTierListPayl
   const now = new Date().toISOString();
   const shareId = payload.is_public ? payload.share_id ?? generateShareId() : null;
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
+
   const { data, error } = await supabase
     .from("tier_lists")
-    .insert({ title: payload.title, is_public: payload.is_public ?? false, share_id: shareId, created_at: now, updated_at: now })
-    .select()
+    .insert({
+      user_id: user.id,
+      title: payload.title,
+      is_public: payload.is_public ?? false,
+      share_id: shareId,
+      created_at: now,
+      updated_at: now,
+    })
+    .select("*")
     .single();
 
   if (error || !data) throw error ?? new Error("Failed to create tier list");
+  const tierListId = (data as unknown as { id: string }).id;
 
   if (payload.items.length) {
     const items = payload.items.map((item) => ({
       ...item,
-      tier_list_id: data.id,
+      tier_list_id: tierListId,
       created_at: now,
       updated_at: now,
     }));
@@ -99,7 +112,7 @@ export async function getUserTierLists(supabase: Supabase): Promise<TierListWith
   if (!data) return [];
 
   return data.map((row) => ({
-    ...(row as TierListRow),
+    ...(row as unknown as TierListRow),
     items: ((row as unknown as { tier_list_items: TierListItemRow[] }).tier_list_items) ?? [],
   }));
 }
@@ -118,7 +131,7 @@ export async function getTierListById(supabase: Supabase, id: string): Promise<T
   if (!data) return null;
 
   return {
-    ...(data as TierListRow),
+    ...(data as unknown as TierListRow),
     items: ((data as unknown as { tier_list_items: TierListItemRow[] }).tier_list_items) ?? [],
   };
 }
@@ -138,7 +151,7 @@ export async function getTierListByShareId(supabase: Supabase, shareId: string):
   if (!data) return null;
 
   return {
-    ...(data as TierListRow),
+    ...(data as unknown as TierListRow),
     items: ((data as unknown as { tier_list_items: TierListItemRow[] }).tier_list_items) ?? [],
   };
 }
