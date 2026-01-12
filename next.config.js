@@ -23,7 +23,7 @@ const nextConfig = {
 
 const sentryOptions = {
   silent: true,
-  disableLogger: true,
+  // Removed deprecated disableLogger - Sentry handles this automatically
 };
 
 module.exports = withSentryConfig(nextConfig, sentryOptions);

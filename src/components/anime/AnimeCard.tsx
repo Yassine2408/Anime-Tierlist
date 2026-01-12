@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import Image from "next/image";
 import { QuickRateModal } from "./QuickRateModal";
 import type { Anime } from "@/types/anime";
@@ -9,7 +9,7 @@ type Props = {
   anime: Anime;
 };
 
-export function AnimeCard({ anime }: Props) {
+export const AnimeCard = memo(function AnimeCard({ anime }: Props) {
   const [showRateModal, setShowRateModal] = useState(false);
 
   return (
@@ -72,4 +72,4 @@ export function AnimeCard({ anime }: Props) {
       />
     </>
   );
-}
+});

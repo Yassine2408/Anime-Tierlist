@@ -35,7 +35,7 @@ export default async function TierListDetailPage({ params, searchParams }: PageP
         const anime = await fetchAnimeById(animeId);
         animeMap.set(animeId, anime);
       } catch (e) {
-        console.error(`Failed to fetch anime ${animeId}`, e);
+        // Silently skip failed anime fetches
       }
     })
   );

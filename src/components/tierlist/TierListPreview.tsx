@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import type { TierListWithItems } from "@/types/database";
@@ -11,7 +12,7 @@ type Props = {
   onShare: (tierList: TierListWithItems) => Promise<void>;
 };
 
-export function TierListPreview({ tierList, onDelete, onDuplicate, onShare }: Props) {
+export const TierListPreview = memo(function TierListPreview({ tierList, onDelete, onDuplicate, onShare }: Props) {
   const updated = formatDistanceToNow(new Date(tierList.updated_at), { addSuffix: true });
   const tiersSummary = getTierSummary(tierList);
 
@@ -84,7 +85,7 @@ export function TierListPreview({ tierList, onDelete, onDuplicate, onShare }: Pr
       </div>
     </article>
   );
-}
+});
 
 function getTierSummary(tierList: TierListWithItems) {
   const tierOrder = ["S", "A", "B", "C", "D", "F"];

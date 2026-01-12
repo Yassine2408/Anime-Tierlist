@@ -196,6 +196,7 @@ function AiringCard({
             fill
             sizes="(min-width: 1280px) 180px, (min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
             className="object-cover transition-all duration-700 group-hover:scale-110"
+            loading="lazy"
             priority={false}
           />
         ) : (

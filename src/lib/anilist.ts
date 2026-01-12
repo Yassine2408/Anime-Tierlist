@@ -38,7 +38,7 @@ async function fetchGraphQL<T>(query: string, variables: Record<string, unknown>
       Accept: "application/json",
     },
     body: JSON.stringify({ query, variables }),
-    cache: "no-store",
+    next: { revalidate: 3600 }, // Cache for 1 hour
   });
 
   const json = (await response.json()) as { data?: T; errors?: Array<{ message: string }> };

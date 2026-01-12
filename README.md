@@ -60,14 +60,14 @@ Visit `http://localhost:3000` to see your app!
 
 ## 📦 Deployment
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions for Netlify.
-
-### Quick Netlify Deployment
+### Vercel (Recommended)
 
 1. Push your code to GitHub
-2. Connect your repo to Netlify
-3. Set environment variables in Netlify dashboard
-4. Deploy!
+2. Import your repository in [Vercel](https://vercel.com)
+3. Add environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. Deploy automatically on every push!
 
 ## 🗄️ Database Schema
 

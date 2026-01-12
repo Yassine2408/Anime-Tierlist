@@ -60,16 +60,21 @@ export default function Home() {
       
       const uniqueIds = Array.from(new Set(data.map((f) => f.anime_id)));
       const cache = new Map<number, Anime>();
-      await Promise.all(
-        uniqueIds.slice(0, 20).map(async (id) => {
-          try {
-            const anime = await fetchAnimeById(id);
-            cache.set(id, anime);
-          } catch (e) {
-            console.error(`Failed to fetch anime ${id}`, e);
-          }
-        })
-      );
+      // Limit concurrent fetches to avoid rate limiting
+      const batchSize = 10;
+      for (let i = 0; i < Math.min(uniqueIds.length, 20); i += batchSize) {
+        const batch = uniqueIds.slice(i, i + batchSize);
+        await Promise.all(
+          batch.map(async (id) => {
+            try {
+              const anime = await fetchAnimeById(id);
+              cache.set(id, anime);
+            } catch (e) {
+              // Silently skip failed anime fetches
+            }
+          })
+        );
+      }
       setAnimeCache(cache);
     } finally {
       if (isRefresh) {

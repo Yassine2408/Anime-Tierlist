@@ -83,7 +83,7 @@ export default function RegisterPage() {
         .eq("id", data.user.id);
 
       if (profileError) {
-        console.error("Error setting username:", profileError);
+        // Username update failed, but user can set it later
       }
     }
 
