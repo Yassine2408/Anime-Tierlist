@@ -266,6 +266,13 @@ export async function fetchAnimeEpisodes(animeId: number): Promise<Episode[]> {
       const episodes = Array.isArray(data.data) ? data.data : [];
       console.log(`[Jikan] Page ${currentPage}: Got ${episodes.length} episodes, has_next_page: ${data.pagination?.has_next_page}`);
       
+      // Special case: If first page is empty and has no pagination info, 
+      // the API likely doesn't have episode data for this anime
+      if (currentPage === 1 && episodes.length === 0 && !data.pagination?.has_next_page) {
+        console.warn(`[Jikan] First page is empty with no pagination for anime ${animeId}. API likely doesn't have episode data.`);
+        return []; // Return empty array to indicate no episode data available
+      }
+      
       // If we get an empty page, increment counter
       if (episodes.length === 0) {
         consecutiveEmptyPages += 1;

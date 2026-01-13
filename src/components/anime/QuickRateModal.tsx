@@ -54,14 +54,13 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
         
         if (!cancelled) {
           if (fetchedEpisodes.length === 0) {
-            // No episodes found - could be API issue or anime has no episode data
-            console.warn(`[QuickRateModal] No episodes returned for anime ${anime.id}. Anime reports ${anime.episodes} episodes.`);
-            setEpisodesError(
-              anime.episodes && anime.episodes > 0
-                ? `This anime has ${anime.episodes} episodes, but episode data is not available from the API. Please enter the episode number manually.`
-                : "Episode data is not available. Please enter the episode number manually."
-            );
+            // No episodes found - API doesn't have episode data for this anime
+            // This is common for some anime where Jikan API doesn't have detailed episode lists
+            console.warn(`[QuickRateModal] No episodes returned for anime ${anime.id}. Anime reports ${anime.episodes} episodes. API may not have episode data.`);
+            // Don't show an error - just silently fall back to manual input
+            // The UI already shows manual input as an option, so no need for an error banner
             setEpisodes([]);
+            setEpisodesError(null); // Clear any previous errors
           } else {
             setEpisodes(fetchedEpisodes);
             // Clear manual input when episodes load successfully
@@ -365,26 +364,33 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
                     </p>
                   )}
                 </div>
-              ) : episodesError || episodes.length === 0 ? (
+              ) : episodesError ? (
                 <div className="flex flex-col gap-3">
-                  {episodesError && (
-                    <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 px-4 py-3 text-center">
-                      <p className="text-xs font-medium text-yellow-400">{episodesError}</p>
-                      <p className="mt-1 text-[9px] font-medium text-muted-2">
-                        Enter episode number manually below
-                      </p>
-                    </div>
-                  )}
-                  {!episodesError && episodes.length === 0 && (
-                    <div className="rounded-2xl border border-border bg-surface-2 px-4 py-3 text-center">
-                      <p className="text-sm font-medium text-muted-2">No episodes available</p>
-                      <p className="mt-1 text-[9px] font-medium text-muted-2">
-                        Enter episode number manually below
-                      </p>
-                    </div>
-                  )}
-                  {/* Manual input when episodes fail to load */}
-                  <div className="flex flex-col gap-2">
+                  {/* Only show error banner for actual errors (rate limits, network issues, etc.) */}
+                  <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 px-4 py-3 text-center">
+                    <p className="text-xs font-medium text-yellow-400">{episodesError}</p>
+                    <p className="mt-1 text-[9px] font-medium text-muted-2">
+                      Enter episode number manually below
+                    </p>
+                  </div>
+                </div>
+              ) : episodes.length === 0 ? (
+                <div className="flex flex-col gap-3">
+                  {/* When episodes are simply not available (not an error), show a subtle info message */}
+                  <div className="rounded-2xl border border-border/50 bg-surface-2/50 px-4 py-3 text-center">
+                    <p className="text-xs font-medium text-muted-2">
+                      Episode list not available
+                    </p>
+                    <p className="mt-1 text-[9px] font-medium text-muted-2">
+                      Please enter the episode number manually
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+              
+              {/* Manual input - always shown when episodes are not loaded or empty */}
+              {(episodesError || episodes.length === 0) && (
+                <div className="flex flex-col gap-2">
                     <input
                       type="number"
                       min={1}
