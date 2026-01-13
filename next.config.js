@@ -19,6 +19,12 @@ const nextConfig = {
       },
     ];
   },
+  // Fix Turbopack root directory warning
+  experimental: {
+    turbo: {
+      root: process.cwd(),
+    },
+  },
 };
 
 const sentryOptions = {
