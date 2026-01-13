@@ -241,6 +241,10 @@ function mapEpisode(episode: JikanEpisode): Episode {
  * The Jikan API returns episodes in pages of 25, so this function will fetch
  * all pages if the anime has 100+ episodes.
  *
+ * For very long series like One Piece (1100+ episodes), this may take a while
+ * due to rate limiting (60 requests/minute). The function will fetch up to
+ * 60 pages (1500 episodes) to handle the longest-running series.
+ *
  * @param animeId - The MyAnimeList ID of the anime
  * @returns Promise resolving to an array of all episodes
  * @throws Error if the request fails or anime is not found
@@ -249,22 +253,50 @@ export async function fetchAnimeEpisodes(animeId: number): Promise<Episode[]> {
   const allEpisodes: Episode[] = [];
   let currentPage = 1;
   let hasNextPage = true;
+  let consecutiveEmptyPages = 0;
 
   while (hasNextPage) {
-    const path = `/anime/${animeId}/episodes?page=${currentPage}`;
-    const data = await requestWithRetry<JikanListResponse<JikanEpisode>>(path);
-    
-    const episodes = Array.isArray(data.data) ? data.data : [];
-    allEpisodes.push(...episodes.map(mapEpisode));
-    
-    hasNextPage = Boolean(data.pagination?.has_next_page);
-    currentPage += 1;
-    
-    // Safety limit to prevent infinite loops (e.g., if API returns has_next_page incorrectly)
-    // Most anime have < 1000 episodes, so 50 pages (1250 episodes) is a reasonable limit
-    if (currentPage > 50) {
-      console.warn(`Reached page limit (50) for anime ${animeId}. Stopping pagination.`);
-      break;
+    try {
+      const path = `/anime/${animeId}/episodes?page=${currentPage}`;
+      const data = await requestWithRetry<JikanListResponse<JikanEpisode>>(path);
+      
+      const episodes = Array.isArray(data.data) ? data.data : [];
+      
+      // If we get an empty page, increment counter
+      if (episodes.length === 0) {
+        consecutiveEmptyPages += 1;
+        // If we get 2 consecutive empty pages, stop (API might be returning empty pages)
+        if (consecutiveEmptyPages >= 2) {
+          console.warn(`Got ${consecutiveEmptyPages} consecutive empty pages for anime ${animeId}. Stopping pagination.`);
+          break;
+        }
+      } else {
+        consecutiveEmptyPages = 0; // Reset counter if we get episodes
+      }
+      
+      allEpisodes.push(...episodes.map(mapEpisode));
+      
+      hasNextPage = Boolean(data.pagination?.has_next_page);
+      currentPage += 1;
+      
+      // Increased limit to handle very long series like One Piece (1100+ episodes)
+      // 60 pages = 1500 episodes, which should cover even the longest-running anime
+      if (currentPage > 60) {
+        console.warn(`Reached page limit (60) for anime ${animeId}. Fetched ${allEpisodes.length} episodes. Stopping pagination.`);
+        break;
+      }
+    } catch (error) {
+      // If we've already fetched some episodes, return what we have
+      // This allows partial loading for very long series
+      if (allEpisodes.length > 0) {
+        console.warn(
+          `Error fetching page ${currentPage} for anime ${animeId}: ${error instanceof Error ? error.message : String(error)}. ` +
+          `Returning ${allEpisodes.length} episodes fetched so far.`
+        );
+        return allEpisodes;
+      }
+      // If we haven't fetched any episodes yet, throw the error
+      throw error;
     }
   }
 

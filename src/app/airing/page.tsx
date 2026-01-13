@@ -55,7 +55,7 @@ export default function AiringPage() {
         <button
           onClick={load}
           disabled={loading}
-          className="rounded-full border border-border bg-surface/50 px-6 py-2.5 text-xs font-black uppercase tracking-wider text-foreground backdrop-blur-sm transition hover:bg-surface disabled:opacity-50 active:scale-95"
+          className="rounded-full border border-border bg-surface/50 px-6 py-2.5 text-xs font-black uppercase tracking-wider text-foreground backdrop-blur-sm transition hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 cursor-pointer"
         >
           {loading ? "Syncing..." : "Refresh"}
         </button>
@@ -133,7 +133,7 @@ function AiringCard({
 
         <button
           onClick={onRate}
-          className="absolute inset-x-3 bottom-3 flex items-center justify-center gap-2 rounded-full bg-brand py-2.5 text-[10px] font-black uppercase tracking-wider text-white shadow-xl shadow-brand/30 opacity-0 backdrop-blur-sm transition-all group-hover:opacity-100 hover:brightness-110 active:scale-95"
+          className="absolute inset-x-3 bottom-3 flex items-center justify-center gap-2 rounded-full bg-brand py-2.5 text-[10px] font-black uppercase tracking-wider text-white shadow-xl shadow-brand/30 opacity-0 backdrop-blur-sm transition-all group-hover:opacity-100 hover:brightness-110 active:scale-95 cursor-pointer"
         >
           <span className="text-sm">★</span>
           Rate Now

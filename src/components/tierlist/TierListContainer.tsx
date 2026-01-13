@@ -363,19 +363,19 @@ export function TierListContainer({
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={handleSave} disabled={saving}
-                className="rounded-full bg-brand px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-xl shadow-brand/20 transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+                className="rounded-full bg-brand px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-xl shadow-brand/20 transition hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {saving ? "SYNCING..." : saveLabel.toUpperCase()}
               </button>
               <button
                 onClick={() => setShareOpen(true)}
-                className="rounded-full border border-border bg-surface/50 px-6 py-2 text-[10px] font-black uppercase tracking-widest text-foreground backdrop-blur-sm transition hover:bg-surface active:scale-95"
+                className="rounded-full border border-border bg-surface/50 px-6 py-2 text-[10px] font-black uppercase tracking-widest text-foreground backdrop-blur-sm transition hover:bg-surface active:scale-95 cursor-pointer"
               >
                 SHARE
               </button>
               <button
                 onClick={handleExportImage} disabled={exporting}
-                className="rounded-full border border-border bg-surface/50 px-6 py-2 text-[10px] font-black uppercase tracking-widest text-foreground backdrop-blur-sm transition hover:bg-surface active:scale-95"
+                className="rounded-full border border-border bg-surface/50 px-6 py-2 text-[10px] font-black uppercase tracking-widest text-foreground backdrop-blur-sm transition hover:bg-surface active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {exporting ? "..." : "EXPORT"}
               </button>
@@ -449,7 +449,7 @@ export function TierListContainer({
                   <button
                     onClick={() => removeTier(tier.id)}
                     disabled={tiers.length <= 1}
-                    className="text-[10px] font-black text-muted transition hover:text-rose-500 disabled:opacity-0"
+                    className="text-[10px] font-black text-muted transition hover:text-rose-500 disabled:opacity-0 disabled:cursor-not-allowed cursor-pointer"
                   >
                     ✕
                   </button>
@@ -474,7 +474,7 @@ export function TierListContainer({
               </div>
               <button
                 onClick={addTier}
-                className="w-full rounded-full bg-surface-2 py-3 text-[10px] font-black uppercase tracking-widest text-foreground transition hover:bg-brand hover:text-white active:scale-95 shadow-inner"
+                className="w-full rounded-full bg-surface-2 py-3 text-[10px] font-black uppercase tracking-widest text-foreground transition hover:bg-brand hover:text-white active:scale-95 shadow-inner cursor-pointer"
               >
                 ADD CUSTOM TIER
               </button>
@@ -489,7 +489,7 @@ export function TierListContainer({
               </span>
               <button
                 onClick={handleTogglePublic}
-                className={`rounded-full px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-white transition ${
+                className={`rounded-full px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-white transition cursor-pointer ${
                   isPublicState ? "bg-brand shadow-lg shadow-brand/20" : "bg-muted shadow-lg shadow-muted/20"
                 }`}
               >

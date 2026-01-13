@@ -13,7 +13,7 @@ create unique index if not exists tier_lists_share_id_key on public.tier_lists (
 -- User profiles for display names
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  username text unique,
+  username text unique not null,
   display_name text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -164,10 +164,37 @@ create trigger episode_feedback_validate_episode
 -- Function to create profile on signup
 create or replace function public.handle_new_user()
 returns trigger as $$
+declare
+  v_username text;
+  v_display_name text;
 begin
-  insert into public.profiles (id, created_at, updated_at)
-  values (new.id, now(), now());
+  -- Get username from user metadata (set during signup)
+  v_username := new.raw_user_meta_data->>'username';
+  v_display_name := new.raw_user_meta_data->>'display_name';
+  
+  -- If username is not provided in metadata, generate a temporary one
+  -- This should not happen if signup form is working correctly
+  if v_username is null or v_username = '' then
+    v_username := 'user_' || substring(new.id::text, 1, 8);
+  end if;
+  
+  -- Insert profile with username (required field)
+  insert into public.profiles (id, username, display_name, created_at, updated_at)
+  values (
+    new.id, 
+    lower(v_username), -- Store username in lowercase for consistency
+    coalesce(v_display_name, v_username),
+    now(), 
+    now()
+  );
   return new;
+exception
+  when unique_violation then
+    -- If username already exists, append a random suffix
+    v_username := v_username || '_' || substring(new.id::text, 1, 4);
+    insert into public.profiles (id, username, display_name, created_at, updated_at)
+    values (new.id, lower(v_username), coalesce(v_display_name, v_username), now(), now());
+    return new;
 end;
 $$ language plpgsql security definer;
 

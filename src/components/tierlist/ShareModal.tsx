@@ -31,7 +31,7 @@ export function ShareModal({ open, onClose, shareUrl, isPublic, onTogglePublic, 
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-2 text-muted transition hover:bg-surface hover:text-foreground shadow-inner"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-2 text-muted transition hover:bg-surface hover:text-foreground shadow-inner cursor-pointer"
             aria-label="Close"
           >
             ✕
@@ -46,7 +46,7 @@ export function ShareModal({ open, onClose, shareUrl, isPublic, onTogglePublic, 
             </div>
             <button
               onClick={onTogglePublic}
-              className={`rounded-full px-5 py-2 text-[10px] font-black uppercase tracking-widest text-white transition ${
+              className={`rounded-full px-5 py-2 text-[10px] font-black uppercase tracking-widest text-white transition cursor-pointer ${
                 isPublic ? "bg-brand shadow-lg shadow-brand/20" : "bg-muted shadow-lg shadow-muted/20"
               }`}
             >
@@ -68,7 +68,7 @@ export function ShareModal({ open, onClose, shareUrl, isPublic, onTogglePublic, 
                   onCopy?.();
                 }}
                 disabled={!shareUrl}
-                className="rounded-xl bg-brand px-4 py-2 text-[10px] font-black uppercase tracking-wider text-white shadow-xl shadow-brand/20 transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+                className="rounded-xl bg-brand px-4 py-2 text-[10px] font-black uppercase tracking-wider text-white shadow-xl shadow-brand/20 transition hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 Copy
               </button>
@@ -92,7 +92,7 @@ function SocialButton({ href, label }: { href: string; label: string }) {
     <Link
       href={href}
       target="_blank"
-      className="rounded-full border border-border bg-surface-2 px-4 py-1.5 text-[9px] font-black uppercase tracking-wider text-foreground transition hover:bg-brand/10 hover:text-brand hover:border-brand/30 shadow-sm"
+      className="rounded-full border border-border bg-surface-2 px-4 py-1.5 text-[9px] font-black uppercase tracking-wider text-foreground transition hover:bg-brand/10 hover:text-brand hover:border-brand/30 shadow-sm cursor-pointer"
     >
       {label}
     </Link>

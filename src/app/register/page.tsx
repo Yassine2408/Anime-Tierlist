@@ -63,6 +63,10 @@ export default function RegisterPage() {
       password,
       options: {
         emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/` : undefined,
+        data: {
+          username: username.toLowerCase(), // Pass username in user metadata
+          display_name: username,
+        },
       },
     });
 
@@ -73,7 +77,11 @@ export default function RegisterPage() {
     }
 
     // Update profile with username after signup
+    // The trigger will create the profile, but we need to set username
     if (data.user) {
+      // Wait a bit for the trigger to create the profile
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      
       const { error: profileError } = await supabase
         .from("profiles")
         .update({ 
@@ -83,7 +91,9 @@ export default function RegisterPage() {
         .eq("id", data.user.id);
 
       if (profileError) {
-        // Username update failed, but user can set it later
+        setError("Failed to set username. Please try again.");
+        setSubmitting(false);
+        return;
       }
     }
 
@@ -112,19 +122,25 @@ export default function RegisterPage() {
         <form className="space-y-5" onSubmit={handleRegister}>
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-muted-2" htmlFor="username">
-              Username
+              Username / Pseudo Name <span className="text-rose-400">*</span>
             </label>
             <input
               id="username" type="text" autoComplete="username" required
               className="w-full rounded-2xl border border-border bg-surface-2 px-4 py-3 text-sm font-bold text-foreground outline-none ring-brand-2/30 transition focus:ring-2"
-              value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())}
+              value={username} onChange={(e) => {
+                const value = e.target.value.toLowerCase();
+                // Only allow alphanumeric and underscore
+                if (/^[a-z0-9_]*$/.test(value) || value === '') {
+                  setUsername(value);
+                }
+              }}
               disabled={submitting || isLoading}
               placeholder="your_username"
               minLength={3}
               maxLength={20}
             />
             <p className="text-[10px] font-medium text-muted-2">
-              3-20 characters, letters, numbers, and underscores only
+              3-20 characters, letters, numbers, and underscores only. Must be unique.
             </p>
           </div>
           <div className="space-y-2">
@@ -178,7 +194,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={submitting || isLoading}
-            className="group relative flex w-full items-center justify-center overflow-hidden rounded-full bg-brand-2 py-4 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-brand-2/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+            className="group relative flex w-full items-center justify-center overflow-hidden rounded-full bg-brand-2 py-4 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-brand-2/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             <span className="relative z-10">{submitting ? "PREPARING..." : "CREATE ACCOUNT"}</span>
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
@@ -187,7 +203,7 @@ export default function RegisterPage() {
 
         <p className="mt-10 text-center text-[10px] font-black uppercase tracking-widest text-muted-2">
           Already a member?{" "}
-          <Link href="/login" className="text-brand-2 hover:text-brand transition-colors underline-offset-4 underline">
+          <Link href="/login" className="text-brand-2 hover:text-brand transition-colors underline-offset-4 underline cursor-pointer">
             Sign In Here
           </Link>
         </p>

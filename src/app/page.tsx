@@ -118,7 +118,7 @@ export default function Home() {
           <button
             onClick={() => load(true)}
             disabled={refreshing}
-            className="rounded-full border border-border bg-surface/50 px-6 py-2.5 text-xs font-black uppercase tracking-wider text-foreground backdrop-blur-sm transition hover:bg-surface disabled:opacity-50 active:scale-95"
+            className="rounded-full border border-border bg-surface/50 px-6 py-2.5 text-xs font-black uppercase tracking-wider text-foreground backdrop-blur-sm transition hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 cursor-pointer"
           >
             {refreshing ? "Syncing..." : "Refresh Feed"}
           </button>
@@ -159,7 +159,7 @@ function FilterButton({ active, onClick, label }: { active: boolean; onClick: ()
   return (
     <button
       onClick={onClick}
-      className={`rounded-full px-5 py-2 text-[10px] font-black uppercase tracking-widest transition ${
+      className={`rounded-full px-5 py-2 text-[10px] font-black uppercase tracking-widest transition cursor-pointer ${
         active
           ? "bg-brand text-white shadow-xl shadow-brand/20"
           : "border border-border bg-surface/50 text-foreground backdrop-blur-sm hover:bg-surface"

@@ -3,6 +3,7 @@
 import { memo, useState } from "react";
 import Image from "next/image";
 import { QuickRateModal } from "./QuickRateModal";
+import { AnimeDetailModal } from "./AnimeDetailModal";
 import type { Anime } from "@/types/anime";
 
 type Props = {
@@ -11,10 +12,23 @@ type Props = {
 
 export const AnimeCard = memo(function AnimeCard({ anime }: Props) {
   const [showRateModal, setShowRateModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+
+  const handleCardClick = () => {
+    setShowDetailModal(true);
+  };
+
+  const handleRateClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click when clicking rate button
+    setShowRateModal(true);
+  };
 
   return (
     <>
-      <article className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-border bg-surface/80 shadow-xl transition-all hover:-translate-y-1 hover:border-brand/40 hover:shadow-brand/10">
+      <article
+        onClick={handleCardClick}
+        className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-border bg-surface/80 shadow-xl transition-all hover:-translate-y-1 hover:border-brand/40 hover:shadow-brand/10 cursor-pointer"
+      >
         <div className="relative aspect-[3/4] w-full overflow-hidden bg-surface-2">
           {anime.imageUrl ? (
             <Image
@@ -40,8 +54,8 @@ export const AnimeCard = memo(function AnimeCard({ anime }: Props) {
           )}
 
           <button
-            onClick={() => setShowRateModal(true)}
-            className="absolute inset-x-3 bottom-3 flex items-center justify-center gap-2 rounded-full bg-brand py-2.5 text-[10px] font-black uppercase tracking-wider text-white shadow-xl shadow-brand/30 opacity-0 backdrop-blur-sm transition-all group-hover:opacity-100 hover:brightness-110 active:scale-95"
+            onClick={handleRateClick}
+            className="absolute inset-x-3 bottom-3 flex items-center justify-center gap-2 rounded-full bg-brand py-2.5 text-[10px] font-black uppercase tracking-wider text-white shadow-xl shadow-brand/30 opacity-0 backdrop-blur-sm transition-all group-hover:opacity-100 hover:brightness-110 active:scale-95 cursor-pointer"
           >
             <span className="text-sm">★</span>
             Rate Now
@@ -65,6 +79,11 @@ export const AnimeCard = memo(function AnimeCard({ anime }: Props) {
           </div>
         </div>
       </article>
+
+      <AnimeDetailModal
+        anime={showDetailModal ? anime : null}
+        onClose={() => setShowDetailModal(false)}
+      />
 
       <QuickRateModal
         anime={showRateModal ? anime : null}

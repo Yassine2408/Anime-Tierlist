@@ -254,4 +254,63 @@ export async function fetchRecentCommunityFeedback(limit = 50): Promise<Communit
   });
 }
 
+export type TrendingAnime = {
+  anime_id: number;
+  avg_rating: number;
+  rating_count: number;
+  total_ratings: number;
+};
+
+/**
+ * Fetches trending anime based on user ratings
+ * Only includes anime with at least 1 rating
+ * Results are sorted by average rating (descending), then by rating count (descending)
+ */
+export async function fetchTrendingAnime(limit = 50): Promise<TrendingAnime[]> {
+  const supabase = createSupabaseBrowserClient();
+  
+  // Get all anime feedback with ratings
+  const { data, error } = await supabase
+    .from("anime_feedback")
+    .select("anime_id, rating")
+    .not("rating", "is", null);
+  
+  if (error) throw error;
+  
+  // Calculate average ratings per anime
+  const ratingMap = new Map<number, { total: number; count: number }>();
+  
+  for (const row of data ?? []) {
+    const animeId = row.anime_id;
+    const rating = row.rating ?? 0;
+    
+    if (!ratingMap.has(animeId)) {
+      ratingMap.set(animeId, { total: 0, count: 0 });
+    }
+    
+    const stats = ratingMap.get(animeId)!;
+    stats.total += rating;
+    stats.count += 1;
+  }
+  
+  // Convert to array and calculate averages
+  const trending: TrendingAnime[] = Array.from(ratingMap.entries())
+    .map(([anime_id, stats]) => ({
+      anime_id,
+      avg_rating: Number((stats.total / stats.count).toFixed(1)),
+      rating_count: stats.count,
+      total_ratings: stats.total,
+    }))
+    .filter((item) => item.rating_count > 0) // Only include anime with ratings
+    .sort((a, b) => {
+      // Sort by average rating (descending), then by count (descending)
+      if (b.avg_rating !== a.avg_rating) {
+        return b.avg_rating - a.avg_rating;
+      }
+      return b.rating_count - a.rating_count;
+    })
+    .slice(0, limit);
+  
+  return trending;
+}
 

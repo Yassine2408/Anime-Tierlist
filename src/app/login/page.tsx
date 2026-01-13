@@ -102,7 +102,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={submitting || isLoading}
-            className="group relative flex w-full items-center justify-center overflow-hidden rounded-full bg-brand py-4 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-brand/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+            className="group relative flex w-full items-center justify-center overflow-hidden rounded-full bg-brand py-4 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-brand/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             <span className="relative z-10">{submitting ? "VERIFYING..." : "ENTER CIRCLE"}</span>
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
@@ -122,7 +122,7 @@ export default function LoginPage() {
 
         <p className="mt-10 text-center text-[10px] font-black uppercase tracking-widest text-muted-2">
           First time here?{" "}
-          <Link href="/register" className="text-brand hover:text-brand-2 transition-colors underline-offset-4 underline">
+          <Link href="/register" className="text-brand hover:text-brand-2 transition-colors underline-offset-4 underline cursor-pointer">
             Create an Account
           </Link>
         </p>
@@ -135,7 +135,7 @@ function SocialBtn({ onClick, active, label }: { onClick: () => void; active: bo
   return (
     <button
       type="button" onClick={onClick} disabled={active}
-      className="rounded-full border border-border bg-surface-2 py-3 text-[10px] font-black uppercase tracking-widest text-foreground transition hover:bg-surface hover:border-brand/30 active:scale-95 disabled:opacity-50"
+      className="rounded-full border border-border bg-surface-2 py-3 text-[10px] font-black uppercase tracking-widest text-foreground transition hover:bg-surface hover:border-brand/30 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
     >
       {active ? "WAIT..." : label}
     </button>

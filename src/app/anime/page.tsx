@@ -129,7 +129,7 @@ export default function AnimePage() {
           <button
             onClick={loadMore}
             disabled={loading}
-            className="group relative flex items-center gap-3 rounded-full bg-surface-2 px-8 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] text-foreground ring-1 ring-border shadow-xl transition-all hover:bg-surface hover:ring-brand active:scale-95 disabled:opacity-50"
+            className="group relative flex items-center gap-3 rounded-full bg-surface-2 px-8 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] text-foreground ring-1 ring-border shadow-xl transition-all hover:bg-surface hover:ring-brand active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {loading ? "Loading..." : "Load More"}
             <span className="h-1.5 w-1.5 rounded-full bg-brand group-hover:animate-ping" />

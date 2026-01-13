@@ -50,15 +50,41 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
       try {
         const fetchedEpisodes = await fetchAnimeEpisodes(anime.id);
         if (!cancelled) {
-          setEpisodes(fetchedEpisodes);
+          if (fetchedEpisodes.length === 0) {
+            // No episodes found - could be API issue or anime has no episode data
+            setEpisodesError(
+              anime.episodes && anime.episodes > 0
+                ? `This anime has ${anime.episodes} episodes, but episode data is not available from the API. Please enter the episode number manually.`
+                : "Episode data is not available. Please enter the episode number manually."
+            );
+            setEpisodes([]);
+          } else {
+            setEpisodes(fetchedEpisodes);
+            // Clear manual input when episodes load successfully
+            setManualEpisodeNumber("");
+            setEpisodeValidationError(null);
+          }
           setLoadingEpisodes(false);
-          // Clear manual input when episodes load successfully
-          setManualEpisodeNumber("");
-          setEpisodeValidationError(null);
         }
       } catch (err) {
         if (!cancelled) {
-          setEpisodesError(err instanceof Error ? err.message : "Failed to load episodes");
+          const errorMessage = err instanceof Error ? err.message : "Failed to load episodes";
+          // Provide more helpful error messages
+          if (errorMessage.includes("429") || errorMessage.includes("rate limit")) {
+            setEpisodesError(
+              "Rate limit reached. Please wait a moment and try again, or enter the episode number manually."
+            );
+          } else if (errorMessage.includes("timeout") || errorMessage.includes("network")) {
+            setEpisodesError(
+              "Network error. This anime has many episodes and may take longer to load. Please try again or enter the episode number manually."
+            );
+          } else if (anime.episodes && anime.episodes > 1000) {
+            setEpisodesError(
+              `This anime has ${anime.episodes} episodes. Loading may take a while due to rate limits. Please wait or enter the episode number manually.`
+            );
+          } else {
+            setEpisodesError(errorMessage);
+          }
           setLoadingEpisodes(false);
           setEpisodes([]);
         }
@@ -271,7 +297,7 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
 
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-2 text-muted transition hover:bg-surface hover:text-foreground shadow-inner"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-2 text-muted transition hover:bg-surface hover:text-foreground shadow-inner cursor-pointer"
           >
             ✕
           </button>
@@ -282,7 +308,7 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
           <div className="flex gap-2 rounded-full border border-border bg-background/50 p-1">
             <button
               onClick={() => setMode("anime")}
-              className={`flex-1 rounded-full py-2 text-[10px] font-black uppercase tracking-widest transition ${
+              className={`flex-1 rounded-full py-2 text-[10px] font-black uppercase tracking-widest transition cursor-pointer ${
                 mode === "anime"
                   ? "bg-brand text-white shadow-lg shadow-brand/20"
                   : "text-muted hover:text-foreground"
@@ -298,7 +324,7 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
                 setEpisodeSearchQuery("");
                 setEpisodeValidationError(null);
               }}
-              className={`flex-1 rounded-full py-2 text-[10px] font-black uppercase tracking-widest transition ${
+              className={`flex-1 rounded-full py-2 text-[10px] font-black uppercase tracking-widest transition cursor-pointer ${
                 mode === "episode"
                   ? "bg-brand-2 text-white shadow-lg shadow-brand-2/20"
                   : "text-muted hover:text-foreground"
@@ -322,7 +348,15 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
               
               {loadingEpisodes ? (
                 <div className="rounded-2xl border border-border bg-surface-2 px-4 py-3 text-center">
-                  <p className="text-sm font-medium text-muted-2">Loading episodes...</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-brand-2 border-t-transparent" />
+                    <p className="text-sm font-medium text-muted-2">Loading episodes...</p>
+                  </div>
+                  {anime.episodes && anime.episodes > 500 && (
+                    <p className="mt-2 text-[10px] font-medium text-muted-2">
+                      This anime has {anime.episodes} episodes. This may take a minute due to rate limits...
+                    </p>
+                  )}
                 </div>
               ) : episodesError || episodes.length === 0 ? (
                 <div className="flex flex-col gap-3">
@@ -401,7 +435,7 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
                             setEpisodeSearchQuery("");
                             setIsEpisodeDropdownOpen(false);
                           }}
-                          className="w-full px-4 py-3 text-left text-sm font-medium text-foreground transition hover:bg-surface-2 focus:bg-surface-2 focus:outline-none"
+                          className="w-full px-4 py-3 text-left text-sm font-medium text-foreground transition hover:bg-surface-2 focus:bg-surface-2 focus:outline-none cursor-pointer"
                         >
                           <div className="flex items-center gap-2">
                             <span className="font-black text-brand-2">Ep {episodeNumber}</span>
@@ -465,7 +499,7 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
                   onMouseEnter={() => setHoveredRating(star)}
                   onMouseLeave={() => setHoveredRating(0)}
                   onClick={() => setRating(star)}
-                  className="group flex h-10 w-10 items-center justify-center rounded-xl transition-all hover:scale-110 active:scale-95"
+                  className="group flex h-10 w-10 items-center justify-center rounded-xl transition-all hover:scale-110 active:scale-95 cursor-pointer"
                 >
                   <span
                     className={`text-2xl transition-all ${
@@ -502,7 +536,7 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
           <button
             onClick={handleSubmit}
             disabled={submitting || rating === 0}
-            className="group relative flex w-full items-center justify-center overflow-hidden rounded-full bg-brand py-4 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-brand/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="group relative flex w-full items-center justify-center overflow-hidden rounded-full bg-brand py-4 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-brand/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             <span className="relative z-10">{submitting ? "SYNCING..." : "POST TO FEED"}</span>
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
