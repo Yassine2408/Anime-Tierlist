@@ -255,19 +255,23 @@ export async function fetchAnimeEpisodes(animeId: number): Promise<Episode[]> {
   let hasNextPage = true;
   let consecutiveEmptyPages = 0;
 
+  console.log(`[Jikan] Starting episode fetch for anime ${animeId}, page ${currentPage}`);
+
   while (hasNextPage) {
     try {
       const path = `/anime/${animeId}/episodes?page=${currentPage}`;
+      console.log(`[Jikan] Fetching ${path}`);
       const data = await requestWithRetry<JikanListResponse<JikanEpisode>>(path);
       
       const episodes = Array.isArray(data.data) ? data.data : [];
+      console.log(`[Jikan] Page ${currentPage}: Got ${episodes.length} episodes, has_next_page: ${data.pagination?.has_next_page}`);
       
       // If we get an empty page, increment counter
       if (episodes.length === 0) {
         consecutiveEmptyPages += 1;
         // If we get 2 consecutive empty pages, stop (API might be returning empty pages)
         if (consecutiveEmptyPages >= 2) {
-          console.warn(`Got ${consecutiveEmptyPages} consecutive empty pages for anime ${animeId}. Stopping pagination.`);
+          console.warn(`[Jikan] Got ${consecutiveEmptyPages} consecutive empty pages for anime ${animeId}. Stopping pagination. Total episodes fetched: ${allEpisodes.length}`);
           break;
         }
       } else {
@@ -282,16 +286,16 @@ export async function fetchAnimeEpisodes(animeId: number): Promise<Episode[]> {
       // Increased limit to handle very long series like One Piece (1100+ episodes)
       // 60 pages = 1500 episodes, which should cover even the longest-running anime
       if (currentPage > 60) {
-        console.warn(`Reached page limit (60) for anime ${animeId}. Fetched ${allEpisodes.length} episodes. Stopping pagination.`);
+        console.warn(`[Jikan] Reached page limit (60) for anime ${animeId}. Fetched ${allEpisodes.length} episodes. Stopping pagination.`);
         break;
       }
     } catch (error) {
+      console.error(`[Jikan] Error fetching page ${currentPage} for anime ${animeId}:`, error);
       // If we've already fetched some episodes, return what we have
       // This allows partial loading for very long series
       if (allEpisodes.length > 0) {
         console.warn(
-          `Error fetching page ${currentPage} for anime ${animeId}: ${error instanceof Error ? error.message : String(error)}. ` +
-          `Returning ${allEpisodes.length} episodes fetched so far.`
+          `[Jikan] Returning ${allEpisodes.length} episodes fetched so far for anime ${animeId}`
         );
         return allEpisodes;
       }
@@ -300,5 +304,6 @@ export async function fetchAnimeEpisodes(animeId: number): Promise<Episode[]> {
     }
   }
 
+  console.log(`[Jikan] Completed episode fetch for anime ${animeId}. Total episodes: ${allEpisodes.length}`);
   return allEpisodes;
 }

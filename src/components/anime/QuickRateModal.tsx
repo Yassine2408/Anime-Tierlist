@@ -48,10 +48,14 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
 
     const loadEpisodes = async () => {
       try {
+        console.log(`[QuickRateModal] Fetching episodes for anime ${anime.id} (${anime.title})...`);
         const fetchedEpisodes = await fetchAnimeEpisodes(anime.id);
+        console.log(`[QuickRateModal] Fetched ${fetchedEpisodes.length} episodes for anime ${anime.id}`);
+        
         if (!cancelled) {
           if (fetchedEpisodes.length === 0) {
             // No episodes found - could be API issue or anime has no episode data
+            console.warn(`[QuickRateModal] No episodes returned for anime ${anime.id}. Anime reports ${anime.episodes} episodes.`);
             setEpisodesError(
               anime.episodes && anime.episodes > 0
                 ? `This anime has ${anime.episodes} episodes, but episode data is not available from the API. Please enter the episode number manually.`
@@ -67,6 +71,7 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
           setLoadingEpisodes(false);
         }
       } catch (err) {
+        console.error(`[QuickRateModal] Error fetching episodes for anime ${anime.id}:`, err);
         if (!cancelled) {
           const errorMessage = err instanceof Error ? err.message : "Failed to load episodes";
           // Provide more helpful error messages
@@ -83,7 +88,9 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
               `This anime has ${anime.episodes} episodes. Loading may take a while due to rate limits. Please wait or enter the episode number manually.`
             );
           } else {
-            setEpisodesError(errorMessage);
+            setEpisodesError(
+              `Failed to load episodes: ${errorMessage}. Please enter the episode number manually.`
+            );
           }
           setLoadingEpisodes(false);
           setEpisodes([]);
