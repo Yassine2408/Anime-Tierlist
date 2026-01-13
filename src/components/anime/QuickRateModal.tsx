@@ -416,7 +416,10 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
                     )}
                   </div>
                 </div>
-              ) : (
+              )}
+              
+              {/* Episode dropdown - shown when episodes are successfully loaded */}
+              {episodes.length > 0 && !episodesError && (
                 <div className="relative">
                   <input
                     ref={episodeInputRef}
