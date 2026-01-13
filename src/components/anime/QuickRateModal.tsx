@@ -414,7 +414,6 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
                         Valid episode number
                       </p>
                     )}
-                  </div>
                 </div>
               )}
               
