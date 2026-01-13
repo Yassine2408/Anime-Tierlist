@@ -1,4 +1,4 @@
-import type { Anime, AnimeListResult, SeasonName } from "@/types/anime";
+import type { Anime, AnimeListResult, SeasonName, Episode } from "@/types/anime";
 
 const BASE_URL = "https://api.jikan.moe/v4";
 const CACHE_TTL_MS = 60_000; // 60 seconds to stay within 60 req/min guideline
@@ -218,3 +218,55 @@ function getSeasonFromMonth(month: number): SeasonName {
   return "fall";
 }
 
+type JikanEpisode = {
+  mal_id: number;
+  title?: string | null;
+  aired?: string | null;
+  filler?: boolean;
+  recap?: boolean;
+};
+
+function mapEpisode(episode: JikanEpisode): Episode {
+  return {
+    mal_id: episode.mal_id,
+    title: episode.title ?? "",
+    aired: episode.aired ?? null,
+    filler: episode.filler ?? false,
+    recap: episode.recap ?? false,
+  };
+}
+
+/**
+ * Fetches all episodes for a given anime, handling pagination automatically.
+ * The Jikan API returns episodes in pages of 25, so this function will fetch
+ * all pages if the anime has 100+ episodes.
+ *
+ * @param animeId - The MyAnimeList ID of the anime
+ * @returns Promise resolving to an array of all episodes
+ * @throws Error if the request fails or anime is not found
+ */
+export async function fetchAnimeEpisodes(animeId: number): Promise<Episode[]> {
+  const allEpisodes: Episode[] = [];
+  let currentPage = 1;
+  let hasNextPage = true;
+
+  while (hasNextPage) {
+    const path = `/anime/${animeId}/episodes?page=${currentPage}`;
+    const data = await requestWithRetry<JikanListResponse<JikanEpisode>>(path);
+    
+    const episodes = Array.isArray(data.data) ? data.data : [];
+    allEpisodes.push(...episodes.map(mapEpisode));
+    
+    hasNextPage = Boolean(data.pagination?.has_next_page);
+    currentPage += 1;
+    
+    // Safety limit to prevent infinite loops (e.g., if API returns has_next_page incorrectly)
+    // Most anime have < 1000 episodes, so 50 pages (1250 episodes) is a reasonable limit
+    if (currentPage > 50) {
+      console.warn(`Reached page limit (50) for anime ${animeId}. Stopping pagination.`);
+      break;
+    }
+  }
+
+  return allEpisodes;
+}

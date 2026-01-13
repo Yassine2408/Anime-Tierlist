@@ -140,6 +140,20 @@ export default function AnimePage() {
   );
 }
 
+/**
+ * AiringCard component for episode rating
+ * 
+ * NOTE: This component appears to be unused in the current implementation.
+ * The main page uses AnimeCard which opens QuickRateModal for rating.
+ * 
+ * Consider deprecating this component in favor of QuickRateModal for:
+ * - Consistent validation logic across the application
+ * - Better UX with episode dropdown/selector
+ * - Unified error handling and user feedback
+ * 
+ * If this component is to be kept, ensure validation logic matches QuickRateModal
+ * to maintain consistency. Current validation has been updated to match.
+ */
 function AiringCard({
   anime,
   summary,
@@ -163,24 +177,74 @@ function AiringCard({
 
   const handleEpisodeSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (ep === "" || epRating === "") {
-      showToast("Fill episode # and rating", "error");
+    
+    // Validation order matches QuickRateModal for consistency
+    
+    // Check rating first (matches QuickRateModal line 115-118)
+    if (epRating === "" || Number(epRating) === 0) {
+      showToast("Pick a rating first", "error");
       return;
     }
+
+    // Validate rating is a positive integer in expected range (1-10)
+    const ratingNum = Number(epRating);
+    if (!Number.isInteger(ratingNum) || ratingNum < 1 || ratingNum > 10) {
+      showToast("Rating must be between 1 and 10", "error");
+      return;
+    }
+
+    // Check episode number (matches QuickRateModal validation)
+    if (ep === "" || ep === null) {
+      showToast("Enter an episode number", "error");
+      return;
+    }
+
+    const episodeNum = Number(ep);
+    
+    // Enhanced validation matching QuickRateModal logic
+    // Basic validation: episode must be a positive integer
+    if (!Number.isInteger(episodeNum) || episodeNum < 1) {
+      showToast("Episode number must be a positive integer (at least 1)", "error");
+      return;
+    }
+
+    // Basic validation: episode must not exceed reasonable upper limit
+    if (episodeNum > 9999) {
+      showToast("Episode number cannot exceed 9999", "error");
+      return;
+    }
+
+    // Advanced validation: check against anime's episode count if available
+    // Only validate if anime has a known positive episode count
+    // For ongoing anime (episodes === null) or unknown count (episodes === 0), allow submission
+    if (anime.episodes != null && typeof anime.episodes === "number" && anime.episodes > 0) {
+      if (episodeNum > anime.episodes) {
+        showToast(
+          `This anime only has ${anime.episodes} episode${anime.episodes === 1 ? "" : "s"}. Episode ${episodeNum} does not exist.`,
+          "error"
+        );
+        return;
+      }
+    }
+    // If episode count is null (ongoing anime) or 0 (unknown), we allow the submission
+    // because new episodes may have aired since the last API update
+    // The database constraint (episode <= 9999) still provides protection
+
     setSubmitting(true);
     try {
       await submitEpisodeFeedback(supabase, {
         anime_id: anime.id,
-        episode: Number(ep),
-        rating: Number(epRating),
+        episode: episodeNum,
+        rating: ratingNum,
         comment: epComment.trim() || null,
       });
-      showToast(`Ep ${ep} synced to feed`, "success");
+      showToast(`Episode ${episodeNum} rating posted to feed`, "success");
       setEp("");
       setEpRating("");
       setEpComment("");
     } catch (err) {
-      showToast("Login required", "error");
+      const errorMessage = err instanceof Error ? err.message : "Failed to submit rating";
+      showToast(errorMessage, "error");
     } finally {
       setSubmitting(false);
     }
@@ -232,9 +296,20 @@ function AiringCard({
             <span className="text-[8px] font-black uppercase tracking-[0.15em] text-muted-2">Community</span>
             <span className="text-xs font-black text-brand-2">{avgText} ★</span>
           </div>
-          <span className="text-[8px] font-bold uppercase tracking-wider text-muted-2">
-            {anime.episodes ?? "?"} Episodes
-          </span>
+          <div className="flex flex-col items-end">
+            <span className="text-[8px] font-bold uppercase tracking-wider text-muted-2">
+              {anime.episodes != null && anime.episodes > 0 
+                ? `${anime.episodes} Episode${anime.episodes === 1 ? "" : "s"}`
+                : anime.episodes === 0 
+                  ? "Episodes Unknown"
+                  : "Ongoing"}
+            </span>
+            {anime.episodes != null && anime.episodes > 0 && (
+              <span className="text-[7px] font-medium text-muted-2 mt-0.5">
+                Max: {anime.episodes}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </article>

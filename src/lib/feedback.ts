@@ -1,6 +1,7 @@
 import { createSupabaseBrowserClient } from "./supabase";
 import type { Database } from "@/types/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { fetchAnimeById } from "./jikan";
 
 type AnimeFeedbackInput = {
   anime_id: number;
@@ -30,6 +31,64 @@ export async function submitEpisodeFeedback(supabase: SupabaseClient<Database>, 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Authentication required");
   
+  // ============================================================
+  // Server-side validation for episode numbers
+  // ============================================================
+  // We validate episode numbers here to prevent invalid data from being inserted,
+  // even if client-side validation is bypassed or fails.
+  //
+  // Validation rules:
+  // - Episode must be a positive integer (>= 1)
+  // - Episode must not exceed reasonable upper limit (<= 9999)
+  // - Episode must not exceed the anime's actual episode count (if known)
+  //
+  // Caching: fetchAnimeById uses Jikan API's built-in caching (60s TTL),
+  // which prevents excessive API calls for the same anime.
+  // ============================================================
+  
+  // Basic validation: episode must be a positive integer
+  if (!Number.isInteger(input.episode) || input.episode < 1) {
+    throw new Error("Episode number must be a positive integer (at least 1)");
+  }
+  
+  // Basic validation: episode must not exceed reasonable upper limit
+  if (input.episode > 9999) {
+    throw new Error("Episode number cannot exceed 9999");
+  }
+  
+  // Advanced validation: check against actual anime episode count
+  try {
+    const anime = await fetchAnimeById(input.anime_id);
+    
+    // If anime has a known episode count, validate against it
+    if (anime.episodes != null && typeof anime.episodes === "number" && anime.episodes > 0) {
+      if (input.episode > anime.episodes) {
+        throw new Error(
+          `This anime only has ${anime.episodes} episode${anime.episodes === 1 ? "" : "s"}. ` +
+          `Episode ${input.episode} does not exist.`
+        );
+      }
+    }
+    // Edge cases handled:
+    // - If episode count is null (ongoing anime): allow submission
+    //   New episodes may have aired since the last API update
+    // - If episode count is 0: treat as unknown, allow submission
+    //   The database constraint (episode <= 9999) still provides protection
+  } catch (error) {
+    // Re-throw our validation errors (episode count exceeded)
+    if (error instanceof Error && error.message.includes("only has")) {
+      throw error;
+    }
+    // If API call fails (network error, anime not found, rate limit, etc.),
+    // we still allow the submission but log a warning
+    // This prevents API failures from blocking legitimate submissions
+    // The database constraint (episode > 0 AND episode <= 9999) still provides protection
+    console.warn(
+      `Failed to fetch anime ${input.anime_id} for episode validation:`,
+      error instanceof Error ? error.message : String(error)
+    );
+  }
+  
   const { data, error } = await supabase.from("episode_feedback").insert({
     user_id: user.id,
     anime_id: input.anime_id,
@@ -37,7 +96,16 @@ export async function submitEpisodeFeedback(supabase: SupabaseClient<Database>, 
     rating: input.rating ?? null,
     comment: input.comment ?? null,
   });
-  if (error) throw error;
+  
+  // Database constraint will also validate episode number, providing defense in depth
+  if (error) {
+    // Provide more user-friendly error messages for constraint violations
+    if (error.code === "23514") {
+      throw new Error("Invalid episode number. Episode must be between 1 and 9999.");
+    }
+    throw error;
+  }
+  
   return data;
 }
 

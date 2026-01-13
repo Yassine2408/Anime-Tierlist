@@ -25,3 +25,10 @@ export interface AnimeListResult {
   currentPage: number;
 }
 
+export interface Episode {
+  mal_id: number;
+  title: string;
+  aired: string | null;
+  filler: boolean;
+  recap: boolean;
+}
