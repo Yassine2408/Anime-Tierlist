@@ -50,12 +50,12 @@ export async function submitEpisodeFeedback(supabase: SupabaseClient<Database>, 
   if (!Number.isInteger(input.episode) || input.episode < 1) {
     throw new Error("Episode number must be a positive integer (at least 1)");
   }
-  
+
   // Basic validation: episode must not exceed reasonable upper limit
   if (input.episode > 9999) {
     throw new Error("Episode number cannot exceed 9999");
   }
-  
+
   // Advanced validation: check against actual anime episode count
   try {
     const anime = await fetchAnimeById(input.anime_id);

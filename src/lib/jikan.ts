@@ -64,13 +64,39 @@ async function requestWithRetry<T>(path: string, cacheTtlMs = CACHE_TTL_MS): Pro
         throw new Error(`Jikan request failed (${response.status}): ${body.slice(0, 200)}`);
       }
 
-      const json = (await response.json()) as JikanResponse<T>;
-      if (!json || typeof json !== "object" || !("data" in json)) {
-        throw new Error("Unexpected Jikan response shape");
+      const json = await response.json();
+      
+      // Handle Jikan API error responses
+      if (json.error || json.message) {
+        throw new Error(`Jikan API error: ${json.error || json.message}`);
       }
-
-      cache.set(cacheKey, { data: json.data, expiresAt: Date.now() + cacheTtlMs });
-      return json.data;
+      
+      // Check if response has the expected structure
+      if (!json || typeof json !== "object") {
+        throw new Error("Unexpected Jikan response: not an object");
+      }
+      
+      // Jikan v4 API always returns { data: ..., pagination: ... } structure
+      // For list endpoints: { data: [...], pagination: {...} }
+      // For single item endpoints: { data: {...} }
+      if (!("data" in json)) {
+        throw new Error("Unexpected Jikan response shape: missing data property");
+      }
+      
+      // For list responses, we need the full response object (data + pagination)
+      // For single item responses, we just need the data
+      // Check if this is a list response by checking if data is an array and pagination exists
+      if (Array.isArray(json.data) && "pagination" in json) {
+        // List response - return the full object
+        const listResponse = json as JikanListResponse<unknown>;
+        cache.set(cacheKey, { data: listResponse as T, expiresAt: Date.now() + cacheTtlMs });
+        return listResponse as T;
+      } else {
+        // Single item response - return just the data
+        const responseData = json.data as T;
+        cache.set(cacheKey, { data: responseData, expiresAt: Date.now() + cacheTtlMs });
+        return responseData;
+      }
     } catch (error) {
       lastError = error;
       attempt += 1;

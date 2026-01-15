@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { fetchSeasonalAnime } from "@/lib/anilist";
+import { fetchSeasonalAnime } from "@/lib/jikan";
 import { submitEpisodeFeedback, fetchAnimeFeedbackSummary } from "@/lib/feedback";
 import { QuickRateModal } from "@/components/anime/QuickRateModal";
 import { useToast } from "@/components/ui/ToastProvider";
@@ -19,13 +19,25 @@ export default function AiringPage() {
     setLoading(true);
     setError(null);
     try {
+      console.log("[AiringPage] Fetching seasonal anime...");
       const data = await fetchSeasonalAnime();
+      console.log("[AiringPage] Received data:", { itemCount: data.items.length, hasNextPage: data.hasNextPage });
+      
+      if (!data.items || data.items.length === 0) {
+        console.warn("[AiringPage] No anime items returned from API");
+        setError("No currently airing anime found. Try refreshing.");
+        setAnime([]);
+        return;
+      }
+      
       setAnime(data.items);
       const ids = data.items.map((a) => a.id);
       const agg = await fetchAnimeFeedbackSummary(ids);
       setSummaries(agg);
     } catch (err) {
+      console.error("[AiringPage] Error loading anime:", err);
       setError(err instanceof Error ? err.message : "Failed to sync airing data");
+      setAnime([]);
     } finally {
       setLoading(false);
     }

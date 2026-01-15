@@ -9,7 +9,7 @@ import { SearchBar } from "@/components/anime/SearchBar";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useToast } from "@/components/ui/ToastProvider";
 import { submitEpisodeFeedback } from "@/lib/feedback";
-import { fetchTopAnime, searchAnime } from "@/lib/anilist";
+import { fetchTopAnime, searchAnime } from "@/lib/jikan";
 import type { Anime } from "@/types/anime";
 
 type FilterState = {

@@ -54,11 +54,8 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
         
         if (!cancelled) {
           if (fetchedEpisodes.length === 0) {
-            // No episodes found - API doesn't have episode data for this anime
-            // This is common for some anime where Jikan API doesn't have detailed episode lists
-            console.warn(`[QuickRateModal] No episodes returned for anime ${anime.id}. Anime reports ${anime.episodes} episodes. API may not have episode data.`);
-            // Don't show an error - just silently fall back to manual input
-            // The UI already shows manual input as an option, so no need for an error banner
+            // No episodes found - anime might not have episode count available
+            console.warn(`[QuickRateModal] No episodes returned for anime ${anime.id}. Anime reports ${anime.episodes} episodes.`);
             setEpisodes([]);
             setEpisodesError(null); // Clear any previous errors
           } else {
@@ -73,24 +70,9 @@ export function QuickRateModal({ anime, onClose, onSuccess }: Props) {
         console.error(`[QuickRateModal] Error fetching episodes for anime ${anime.id}:`, err);
         if (!cancelled) {
           const errorMessage = err instanceof Error ? err.message : "Failed to load episodes";
-          // Provide more helpful error messages
-          if (errorMessage.includes("429") || errorMessage.includes("rate limit")) {
-            setEpisodesError(
-              "Rate limit reached. Please wait a moment and try again, or enter the episode number manually."
-            );
-          } else if (errorMessage.includes("timeout") || errorMessage.includes("network")) {
-            setEpisodesError(
-              "Network error. This anime has many episodes and may take longer to load. Please try again or enter the episode number manually."
-            );
-          } else if (anime.episodes && anime.episodes > 1000) {
-            setEpisodesError(
-              `This anime has ${anime.episodes} episodes. Loading may take a while due to rate limits. Please wait or enter the episode number manually.`
-            );
-          } else {
-            setEpisodesError(
-              `Failed to load episodes: ${errorMessage}. Please enter the episode number manually.`
-            );
-          }
+          setEpisodesError(
+            `Failed to load episodes: ${errorMessage}. Please enter the episode number manually.`
+          );
           setLoadingEpisodes(false);
           setEpisodes([]);
         }
